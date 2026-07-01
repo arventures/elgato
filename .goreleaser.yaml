@@ -1,0 +1,60 @@
+# GoReleaser configuration.
+# Docs: https://goreleaser.com  —  run `goreleaser check` to validate.
+version: 2
+
+project_name: elgato
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w -X main.version={{ .Version }}
+
+archives:
+  - formats: [tar.gz]
+    name_template: >-
+      {{ .ProjectName }}_{{ .Os }}_{{ .Arch }}
+
+checksum:
+  name_template: "checksums.txt"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+
+# Publish a Homebrew formula into the tap repo on every tagged release.
+# Requires a Personal Access Token with `contents:write` on
+# github.com/arventures/homebrew-elgato, exposed as TAP_GITHUB_TOKEN.
+brews:
+  - name: elgato
+    repository:
+      owner: arventures
+      name: homebrew-elgato
+      branch: main
+      token: "{{ .Env.TAP_GITHUB_TOKEN }}"
+    directory: Formula
+    homepage: "https://github.com/arventures/elgato"
+    description: "Control Elgato Key Lights from the command line"
+    license: "MIT"
+    commit_author:
+      name: goreleaser-bot
+      email: goreleaser@users.noreply.github.com
+    install: |
+      bin.install "elgato"
+      generate_completions_from_executable(bin/"elgato", "completion")
+    test: |
+      system "#{bin}/elgato", "--version"
