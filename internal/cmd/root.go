@@ -13,6 +13,7 @@ var opts struct {
 	light   string
 	refresh bool
 	json    bool
+	color   string
 	timeout time.Duration
 }
 
@@ -34,6 +35,7 @@ func NewRootCmd(version string) *cobra.Command {
 	pf.StringVarP(&opts.light, "light", "l", "", "target a single light by name or serial")
 	pf.BoolVar(&opts.refresh, "refresh", false, "force mDNS discovery instead of using cached addresses")
 	pf.BoolVar(&opts.json, "json", false, "output machine-readable JSON")
+	pf.StringVar(&opts.color, "color", "auto", "when to show the temperature color swatch: auto|always|never")
 	pf.DurationVar(&opts.timeout, "timeout", 2*time.Second, "mDNS discovery timeout")
 
 	root.AddCommand(

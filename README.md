@@ -48,11 +48,23 @@ Global flags (work on any command):
 | `-l, --light <name>` | Act on a single light (by name or serial) |
 | `--refresh` | Force mDNS discovery instead of using cached addresses |
 | `--json` | Machine-readable output |
+| `--color auto\|always\|never` | When to show the temperature color swatch (default `auto`) |
 | `--timeout 2s` | How long to browse for lights |
 
 By default a command acts on **all** lights it finds. Use `--light` to narrow to one.
 
 Shell completion is available via `elgato completion <bash|zsh|fish>` (Homebrew installs it automatically).
+
+### Temperature color swatch
+
+Every command that prints state (`status`, `on`, `temp`, …) shows a `COLOR` column with the approximate on-screen color of the light's color temperature — warm amber down near 2900K, a cool bluish white up near 7000K — alongside its `#rrggbb` hex value:
+
+```text
+NAME             HOST       POWER  BRIGHTNESS  TEMPERATURE  COLOR
+Arvi's KeyLight  10.0.0.11  on     50%         4700K        ███ #ffdec3
+```
+
+The swatch uses 24-bit ("truecolor") ANSI and is shown only when writing to a terminal. It is suppressed automatically when piping output, when the [`NO_COLOR`](https://no-color.org) environment variable is set, or with `--color never`; force it on with `--color always`. The `--json` output includes the value as a `color` field.
 
 ## How it finds your lights
 
