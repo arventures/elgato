@@ -36,25 +36,30 @@ changelog:
       - "^test:"
       - "^chore:"
 
-# Publish a Homebrew formula into the tap repo on every tagged release.
-# Requires a Personal Access Token with `contents:write` on
-# github.com/arventures/homebrew-elgato, exposed as TAP_GITHUB_TOKEN.
-brews:
+# Publish a Homebrew cask into the tap repo on every tagged release.
+# (Homebrew now prefers casks over formulae for pre-built binaries; casks are
+# macOS-only, which suits this tool.) Requires a Personal Access Token with
+# contents:write on github.com/arventures/homebrew-elgato, as TAP_GITHUB_TOKEN.
+homebrew_casks:
   - name: elgato
+    binaries:
+      - elgato
     repository:
       owner: arventures
       name: homebrew-elgato
       branch: main
       token: "{{ .Env.TAP_GITHUB_TOKEN }}"
-    directory: Formula
+    directory: Casks
     homepage: "https://github.com/arventures/elgato"
     description: "Control Elgato Key Lights from the command line"
-    license: "MIT"
     commit_author:
       name: goreleaser-bot
       email: goreleaser@users.noreply.github.com
-    install: |
-      bin.install "elgato"
-      generate_completions_from_executable(bin/"elgato", "completion")
-    test: |
-      system "#{bin}/elgato", "--version"
+    # The binary is not code-signed/notarized, so strip the quarantine flag on
+    # install to avoid "elgato is damaged and can't be opened" from Gatekeeper.
+    hooks:
+      post:
+        install: |
+          if OS.mac?
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/elgato"]
+          end

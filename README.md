@@ -19,7 +19,7 @@ With [Homebrew](https://brew.sh):
 brew install arventures/elgato/elgato
 ```
 
-That's shorthand for tapping `arventures/homebrew-elgato` and installing the `elgato` formula. To update later: `brew upgrade elgato`.
+That's shorthand for tapping `arventures/homebrew-elgato` and installing the `elgato` cask (macOS). To update later: `brew upgrade elgato`.
 
 Or build from source (Go 1.26+):
 
@@ -93,7 +93,7 @@ git tag v0.1.0
 git push origin v0.1.0
 ```
 
-The workflow builds macOS/Linux binaries (Intel + Apple Silicon), publishes a GitHub Release, and pushes an updated formula to the tap. Validate config locally with `goreleaser check` and dry-run with `goreleaser release --snapshot --clean`.
+The workflow builds macOS/Linux binaries (Intel + Apple Silicon), publishes a GitHub Release, and pushes an updated Homebrew **cask** to the tap (Homebrew now prefers casks for pre-built binaries; casks are macOS-only). Validate config locally with `goreleaser check` and dry-run with `goreleaser release --snapshot --clean`.
 
 ## Development
 
