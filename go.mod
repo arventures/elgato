@@ -3,6 +3,7 @@ module github.com/arventures/elgato
 go 1.26
 
 require (
+	github.com/brutella/dnssd v1.2.14
 	github.com/brutella/hap v0.0.35
 	github.com/libp2p/zeroconf/v2 v2.2.0
 	github.com/spf13/cobra v1.8.1
@@ -10,7 +11,6 @@ require (
 )
 
 require (
-	github.com/brutella/dnssd v1.2.14 // indirect
 	github.com/go-chi/chi v1.5.4 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/miekg/dns v1.1.72 // indirect

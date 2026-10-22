@@ -14,8 +14,19 @@ import (
 const serviceType = "_elg._tcp"
 
 // Discover browses the local network for Elgato lights, collecting responses
-// for up to timeout. It returns one Device per unique host.
+// for up to timeout. It returns one Device per unique host. mDNS runs over UDP
+// and a light's reply now and then gets lost on Wi-Fi, so a browse that finds
+// nothing is tried once more before reporting no lights.
 func Discover(ctx context.Context, timeout time.Duration) ([]*elgato.Device, error) {
+	devices, err := browse(ctx, timeout)
+	if err != nil || len(devices) > 0 || ctx.Err() != nil {
+		return devices, err
+	}
+	return browse(ctx, timeout)
+}
+
+// browse runs a single mDNS browse for up to timeout.
+func browse(ctx context.Context, timeout time.Duration) ([]*elgato.Device, error) {
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 

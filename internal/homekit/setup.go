@@ -43,6 +43,17 @@ func SetupCode(store hap.Store, code string) (string, error) {
 	return code, store.Set(codeKey, []byte(code))
 }
 
+// Paired reports whether the bridge has been added to a home.
+func Paired(store hap.Store) bool {
+	keys, err := store.KeysWithSuffix(".pairing")
+	return err == nil && len(keys) > 0
+}
+
+// PairingSteps tells you how to add the bridge called name in the Home app.
+func PairingSteps(name, code string) string {
+	return fmt.Sprintf("in the Home app tap + → Add Accessory → More options…, choose %q and enter %s", name, FormatCode(code))
+}
+
 // FormatCode formats a setup code the way the Home app shows it: 123-45-678.
 func FormatCode(code string) string {
 	if len(code) != 8 {

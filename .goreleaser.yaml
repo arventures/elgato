@@ -51,7 +51,7 @@ homebrew_casks:
       token: "{{ .Env.TAP_GITHUB_TOKEN }}"
     directory: Casks
     homepage: "https://github.com/arventures/elgato"
-    description: "Control Elgato Key Lights from the command line"
+    description: "Control Elgato Key Lights from Apple Home and the command line"
     commit_author:
       name: goreleaser-bot
       email: goreleaser@users.noreply.github.com

@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"slices"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -23,6 +24,9 @@ import (
 	"github.com/brutella/hap"
 	"github.com/spf13/cobra"
 )
+
+// bridgeName is how the bridge appears in the Home app while you add it.
+const bridgeName = "Elgato Bridge"
 
 // The launchd daemon that runs the bridge in the background on macOS.
 const (
@@ -78,7 +82,7 @@ func runHomeKit(ctx context.Context, version, code, listen string, poll time.Dur
 		return err
 	}
 	return homekit.Run(ctx, store, devices, homekit.Options{
-		Name:    "Elgato Bridge",
+		Name:    bridgeName,
 		Version: version,
 		Code:    code,
 		Addr:    listen,
@@ -166,6 +170,23 @@ func newHomeKitInstallCmd() *cobra.Command {
 			if runtime.GOOS != "darwin" {
 				return errors.New("install is for macOS; elsewhere, run `elgato homekit` under your service manager")
 			}
+			// Find the lights first: a bridge with none to show would just
+			// restart over and over in the background.
+			devices, err := homekitDevices(cmd.Context())
+			if err != nil {
+				return err
+			}
+			for _, d := range devices {
+				fmt.Fprintf(stdout, "Found %s (%s)\n", d.Label(), d.Host)
+			}
+			// Settle the setup code now, as you, so it can be shown below and the
+			// daemon reads the same one.
+			store := hap.NewFsStore(homekitDir())
+			code, err := homekit.SetupCode(store, "")
+			if err != nil {
+				return err
+			}
+
 			exe, err := os.Executable()
 			if err != nil {
 				return err
@@ -185,7 +206,7 @@ func newHomeKitInstallCmd() *cobra.Command {
 				return err
 			}
 			defer os.Remove(tmp.Name())
-			if _, err := tmp.WriteString(daemonPlistXML(exe, u.Username, u.HomeDir, logPath)); err != nil {
+			if _, err := tmp.WriteString(daemonPlistXML(exe, daemonArgs(), u.Username, u.HomeDir, logPath)); err != nil {
 				return err
 			}
 			if err := tmp.Close(); err != nil {
@@ -200,8 +221,13 @@ func newHomeKitInstallCmd() *cobra.Command {
 			if err := sudo("launchctl", "bootstrap", "system", daemonPlist); err != nil {
 				return err
 			}
-			fmt.Fprintf(stdout, "Installed. The bridge is running and will start at every boot.\n")
-			fmt.Fprintf(stdout, "Its log, including the setup code for the Home app: %s\n", logPath)
+			fmt.Fprintln(stdout, "Installed. The bridge is running and will start at every boot.")
+			if homekit.Paired(store) {
+				fmt.Fprintln(stdout, "It's already in your Home app.")
+			} else {
+				fmt.Fprintf(stdout, "To add it: %s.\n", homekit.PairingSteps(bridgeName, code))
+			}
+			fmt.Fprintf(stdout, "Log: %s\n", logPath)
 			return nil
 		},
 	}
@@ -227,9 +253,29 @@ func newHomeKitUninstallCmd() *cobra.Command {
 	}
 }
 
-// daemonPlistXML renders the launchd job that runs `elgato homekit` as user.
+// daemonArgs is what the daemon runs after the executable: `homekit`, plus
+// any --host, --port or --light you installed with.
+func daemonArgs() []string {
+	var args []string
+	if opts.host != "" {
+		args = append(args, "--host", opts.host)
+	}
+	if opts.port != elgato.DefaultPort {
+		args = append(args, "--port", strconv.Itoa(opts.port))
+	}
+	if opts.light != "" {
+		args = append(args, "--light", opts.light)
+	}
+	return append(args, "homekit")
+}
+
+// daemonPlistXML renders the launchd job that runs exe with args as user.
 // HOME is set explicitly so the bridge finds ~/.config/elgato.
-func daemonPlistXML(exe, username, home, logPath string) string {
+func daemonPlistXML(exe string, args []string, username, home, logPath string) string {
+	var program strings.Builder
+	for _, a := range append([]string{exe}, args...) {
+		fmt.Fprintf(&program, "\t\t<string>%s</string>\n", html.EscapeString(a))
+	}
 	return fmt.Sprintf(`<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -238,9 +284,7 @@ func daemonPlistXML(exe, username, home, logPath string) string {
 	<string>%s</string>
 	<key>ProgramArguments</key>
 	<array>
-		<string>%s</string>
-		<string>homekit</string>
-	</array>
+%s	</array>
 	<key>UserName</key>
 	<string>%s</string>
 	<key>EnvironmentVariables</key>
@@ -258,7 +302,7 @@ func daemonPlistXML(exe, username, home, logPath string) string {
 	<string>%[5]s</string>
 </dict>
 </plist>
-`, html.EscapeString(daemonLabel), html.EscapeString(exe), html.EscapeString(username), html.EscapeString(home), html.EscapeString(logPath))
+`, html.EscapeString(daemonLabel), program.String(), html.EscapeString(username), html.EscapeString(home), html.EscapeString(logPath))
 }
 
 // sudo runs an admin command, letting sudo prompt for your password.

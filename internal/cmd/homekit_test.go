@@ -4,15 +4,18 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 )
 
 func TestDaemonPlistXML(t *testing.T) {
-	plist := daemonPlistXML("/Users/a&b/go/bin/elgato", "arvi", "/Users/a&b", "/Users/a&b/Library/Logs/elgato-homekit.log")
+	plist := daemonPlistXML("/Users/a&b/go/bin/elgato", []string{"--light", "key & left", "homekit"},
+		"arvi", "/Users/a&b", "/Users/a&b/Library/Logs/elgato-homekit.log")
 	for _, want := range []string{
 		"<string>ventures.ar.elgato.homekit</string>",
-		"<string>/Users/a&amp;b/go/bin/elgato</string>\n\t\t<string>homekit</string>",
+		"<array>\n\t\t<string>/Users/a&amp;b/go/bin/elgato</string>\n\t\t<string>--light</string>\n" +
+			"\t\t<string>key &amp; left</string>\n\t\t<string>homekit</string>\n\t</array>",
 		"<key>UserName</key>\n\t<string>arvi</string>",
 		"<key>HOME</key>\n\t\t<string>/Users/a&amp;b</string>",
 		"<key>StandardErrorPath</key>\n\t<string>/Users/a&amp;b/Library/Logs/elgato-homekit.log</string>",
@@ -32,5 +35,21 @@ func TestDaemonPlistXML(t *testing.T) {
 	}
 	if out, err := exec.Command(plutil, "-lint", path).CombinedOutput(); err != nil {
 		t.Errorf("plutil -lint: %v\n%s", err, out)
+	}
+}
+
+func TestDaemonArgsKeepInstallFlags(t *testing.T) {
+	saved := opts
+	t.Cleanup(func() { opts = saved })
+
+	opts.host, opts.port, opts.light = "", 9123, ""
+	if got := daemonArgs(); !slices.Equal(got, []string{"homekit"}) {
+		t.Errorf("no flags: daemonArgs() = %q, want [homekit]", got)
+	}
+
+	opts.host, opts.port, opts.light = "10.0.0.11", 9124, "key-left"
+	want := []string{"--host", "10.0.0.11", "--port", "9124", "--light", "key-left", "homekit"}
+	if got := daemonArgs(); !slices.Equal(got, want) {
+		t.Errorf("with flags: daemonArgs() = %q, want %q", got, want)
 	}
 }

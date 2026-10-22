@@ -35,6 +35,17 @@ func TestSetupCode(t *testing.T) {
 	}
 }
 
+func TestPaired(t *testing.T) {
+	store := hap.NewMemStore()
+	if Paired(store) {
+		t.Fatal("a new bridge reports paired")
+	}
+	_ = store.Set("3a4b.pairing", []byte("{}")) // how hap saves each paired controller
+	if !Paired(store) {
+		t.Error("a bridge with a saved pairing reports unpaired")
+	}
+}
+
 func TestFormatCode(t *testing.T) {
 	if got := FormatCode("31415926"); got != "314-15-926" {
 		t.Errorf("FormatCode = %q, want 314-15-926", got)

@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/arventures/elgato/internal/elgato"
+	dnssdlog "github.com/brutella/dnssd/log"
 	"github.com/brutella/hap"
 	"github.com/brutella/hap/accessory"
 	"github.com/brutella/hap/characteristic"
@@ -37,6 +38,10 @@ type Options struct {
 // Run serves the bridge until ctx is cancelled. Every device needs a serial
 // number: it is the light's identity in HomeKit.
 func Run(ctx context.Context, store hap.Store, devices []*elgato.Device, opts Options) error {
+	// The mDNS library's info messages are protocol trivia about other
+	// devices' packets; nothing in them is actionable here.
+	dnssdlog.Info.Disable()
+
 	serials := make([]string, 0, len(devices))
 	for _, d := range devices {
 		if d.Serial() == "" {
@@ -86,8 +91,7 @@ func Run(ctx context.Context, store hap.Store, devices []*elgato.Device, opts Op
 	if server.IsPaired() {
 		log.Printf("HomeKit bridge %q is paired and running", opts.Name)
 	} else {
-		log.Printf("HomeKit bridge %q is ready to pair. In the Home app tap + → Add Accessory → More options…, choose %q and enter %s",
-			opts.Name, opts.Name, FormatCode(opts.Code))
+		log.Printf("HomeKit bridge %q is ready to pair: %s", opts.Name, PairingSteps(opts.Name, opts.Code))
 	}
 
 	go poll(ctx, lights, opts.Poll)
