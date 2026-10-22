@@ -57,9 +57,14 @@ homebrew_casks:
       email: goreleaser@users.noreply.github.com
     # The binary is not code-signed/notarized, so strip the quarantine flag on
     # install to avoid "elgato is damaged and can't be opened" from Gatekeeper.
-    hooks:
-      post:
-        install: |
-          if OS.mac?
-            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/elgato"]
-          end
+    # Homebrew deprecated Ruby `postflight` blocks (what hooks.post.install
+    # writes) for the declarative `postflight_steps` stanza. GoReleaser only
+    # writes that from v2.19 (hooks.post.install_steps), so add it as a custom
+    # block until then. The {{ "..." }} wrapper keeps Homebrew's own
+    # {{staged_path}} token intact through GoReleaser's templating.
+    custom_block: |
+      postflight_steps do
+        on_macos do
+          run "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "{{ "{{staged_path}}" }}/elgato"]
+        end
+      end
