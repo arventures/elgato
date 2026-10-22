@@ -55,15 +55,24 @@ homebrew_casks:
     commit_author:
       name: goreleaser-bot
       email: goreleaser@users.noreply.github.com
+    # Homebrew runs `elgato completion <shell>` during install and installs the
+    # bash, zsh and fish scripts it prints.
+    generate_completions_from_executable:
+      executable: elgato
+      shell_parameter_format: cobra
+      shells: [bash, zsh, fish]
     # The binary is not code-signed/notarized, so strip the quarantine flag on
     # install to avoid "elgato is damaged and can't be opened" from Gatekeeper.
-    # Homebrew deprecated Ruby `postflight` blocks (what hooks.post.install
-    # writes) for the declarative `postflight_steps` stanza. GoReleaser only
-    # writes that from v2.19 (hooks.post.install_steps), so add it as a custom
+    # It must be a *pre*flight step: Homebrew generates the completions above
+    # before any postflight step, whatever the stanza order, and macOS blocks
+    # the still-quarantined binary (goreleaser/goreleaser#6593).
+    # Homebrew deprecated Ruby `preflight` blocks (what hooks.pre.install
+    # writes) for the declarative `preflight_steps` stanza. GoReleaser only
+    # writes that from v2.19 (hooks.pre.install_steps), so add it as a custom
     # block until then. The {{ "..." }} wrapper keeps Homebrew's own
     # {{staged_path}} token intact through GoReleaser's templating.
     custom_block: |
-      postflight_steps do
+      preflight_steps do
         on_macos do
           run "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "{{ "{{staged_path}}" }}/elgato"]
         end
