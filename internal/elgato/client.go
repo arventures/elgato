@@ -79,6 +79,11 @@ func (d *Device) FetchInfo(ctx context.Context) (*AccessoryInfo, error) {
 	return &info, nil
 }
 
+// Identify makes the light blink briefly so you can tell which one it is.
+func (d *Device) Identify(ctx context.Context) error {
+	return d.doJSON(ctx, http.MethodPost, "/elgato/identify", nil, nil)
+}
+
 // Apply reads the current state, mutates every light with fn, and writes it
 // back. It is used by on/off/toggle/brightness/temperature so relative changes
 // are computed against each light's real current value.

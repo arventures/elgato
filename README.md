@@ -39,6 +39,7 @@ go install github.com/arventures/elgato@latest
 | `elgato temp 4500` | Set color temperature to 4500K |
 | `elgato status` | Show current state |
 | `elgato list` | Discover lights and refresh the cache |
+| `elgato homekit` | Put your lights in the Apple Home app ([below](#apple-home-homekit)) |
 
 Global flags (work on any command):
 
@@ -65,6 +66,36 @@ Arvi's KeyLight  10.0.0.11  on     50%         4700K        ███ #ffdec3
 ```
 
 The swatch uses 24-bit ("truecolor") ANSI and is shown only when writing to a terminal. It is suppressed automatically when piping output, when the [`NO_COLOR`](https://no-color.org) environment variable is set, or with `--color never`; force it on with `--color always`. The `--json` output includes the value as a `color` field.
+
+## Apple Home (HomeKit)
+
+`elgato homekit` runs a small HomeKit bridge that puts your lights in the Apple Home app as dimmable bulbs with color temperature, so Control Center, Siri, scenes and automations can use them like any other HomeKit light.
+
+```console
+$ elgato homekit
+2026/10/22 04:51:37 Arvi's KeyLight (10.0.0.11): off, 14%, 7000K
+2026/10/22 04:51:37 HomeKit bridge "Elgato Bridge" is ready to pair. In the Home app tap + → Add Accessory → More options…, choose "Elgato Bridge" and enter 314-15-926
+```
+
+To add it, open **Home** on an iPhone on the same Wi-Fi, tap **+** → **Add Accessory** → **More options…**, pick **Elgato Bridge** and enter the code. The Home app warns that the accessory isn't certified; choose **Add Anyway**.
+
+To keep the bridge running in the background on a Mac, starting at boot:
+
+```console
+elgato homekit install     # sudo asks for your password once
+elgato homekit uninstall
+```
+
+`install` adds a launchd daemon (`/Library/LaunchDaemons/ventures.ar.elgato.homekit.plist`) that runs `elgato homekit` as you and logs to `~/Library/Logs/elgato-homekit.log`, setup code included. It's a daemon rather than a login item on purpose: macOS's Local Network privacy blocks launchd agents from reaching devices on your network but allows daemons ([TN3179](https://developer.apple.com/documentation/technotes/tn3179-understanding-local-network-privacy)).
+
+Good to know:
+
+- The Home app reaches your lights through the bridge, so they show **No Response** while it isn't running, for example while the Mac sleeps. For control around the clock, run `elgato homekit` on an always-on Mac or Linux machine on the same network.
+- Changes made elsewhere (Control Center, this CLI, the button on the light) show up in Home within a few seconds. `--poll` sets how often the bridge checks (default `3s`).
+- The bridge adds every light in your config, including one that's offline when it starts (it shows **No Response** until it's back). Use `--light` to add just one.
+- The bridge looks up each light's address when it starts. If a light's IP address changes while it runs, restart it, or give the light a DHCP reservation so it never changes.
+- Pairing data, the setup code and accessory IDs live in `~/.config/elgato/homekit`. To start over, remove the bridge in the Home app, stop the bridge and delete that folder.
+- `--code` picks your own setup code, and `--listen` sets the server address (default `:51827`).
 
 ## How it finds your lights
 
@@ -115,7 +146,7 @@ go test ./...       # run unit tests (pure logic; no device needed)
 go vet ./...
 ```
 
-The pure logic (Kelvin↔mireds conversion, brightness parsing, request shape) lives in `internal/elgato` and is unit-tested without hardware. Network code (HTTP client, mDNS) is isolated in `internal/elgato` and `internal/discovery`.
+The pure logic (Kelvin↔mireds conversion, brightness parsing, request shape) lives in `internal/elgato` and is unit-tested without hardware. Network code (HTTP client, mDNS) is isolated in `internal/elgato` and `internal/discovery`. The HomeKit bridge lives in `internal/homekit` and is tested against a fake light served by `httptest`.
 
 ## Disclaimer
 

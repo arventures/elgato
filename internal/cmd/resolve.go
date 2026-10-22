@@ -46,6 +46,21 @@ func resolveDevices(ctx context.Context) ([]*elgato.Device, error) {
 	}
 
 	// 3. Discover on the network and refresh the cache.
+	found, err := discover(ctx, cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	devices := filterByLight(found, opts.light)
+	if len(devices) == 0 {
+		return nil, errNoLights
+	}
+	return devices, nil
+}
+
+// discover browses the network for lights, fetches their info and refreshes
+// the cache with whatever it finds.
+func discover(ctx context.Context, cfg *config.Config) ([]*elgato.Device, error) {
 	found, err := discovery.Discover(ctx, cfg.Timeout(opts.timeout))
 	if err != nil {
 		return nil, fmt.Errorf("discovery failed: %w", err)
@@ -60,12 +75,7 @@ func resolveDevices(ctx context.Context) ([]*elgato.Device, error) {
 			fmt.Fprintln(stderr, "warning: could not save config:", err)
 		}
 	}
-
-	devices := filterByLight(found, opts.light)
-	if len(devices) == 0 {
-		return nil, errNoLights
-	}
-	return devices, nil
+	return found, nil
 }
 
 // reachableFromCache builds devices from cached config entries and keeps only

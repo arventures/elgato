@@ -5,10 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"text/tabwriter"
-	"time"
 
 	"github.com/arventures/elgato/internal/config"
-	"github.com/arventures/elgato/internal/discovery"
 	"github.com/spf13/cobra"
 )
 
@@ -26,19 +24,9 @@ func newListCmd() *cobra.Command {
 				return fmt.Errorf("loading config: %w", err)
 			}
 
-			found, err := discovery.Discover(ctx, cfg.Timeout(opts.timeout))
+			found, err := discover(ctx, cfg)
 			if err != nil {
-				return fmt.Errorf("discovery failed: %w", err)
-			}
-			for _, d := range found {
-				infoCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
-				_, _ = d.FetchInfo(infoCtx)
-				cancel()
-			}
-			if cfg.RememberDevices(found) {
-				if err := cfg.Save(); err != nil {
-					fmt.Fprintln(stderr, "warning: could not save config:", err)
-				}
+				return err
 			}
 
 			type row struct {
