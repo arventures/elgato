@@ -31,8 +31,8 @@ Or, with Go 1.26 or later: `go install github.com/arventures/elgato@latest`.
 
 ```console
 $ elgato list
-NAME             SERIAL        HOST       PORT  FIRMWARE
-Arvi's KeyLight  CW12A3B45678  10.0.0.11  9123  1.0.3
+NAME       SERIAL        HOST          PORT  FIRMWARE
+Key Light  CW12A3B45678  192.168.1.50  9123  1.0.3
 ```
 
 Nothing listed? Make sure the light is powered on and on the same network as your Mac, then run it again.
@@ -41,7 +41,7 @@ Nothing listed? Make sure the light is powered on and on the same network as you
 
 ```console
 $ elgato homekit install
-Found Arvi's KeyLight (10.0.0.11)
+Found Key Light (192.168.1.50)
 Adding a launchd daemon needs admin rights, so sudo may ask for your password.
 Password:
 Installed. The bridge is running and will start at every boot.
@@ -121,7 +121,7 @@ Global flags (work on any command):
 
 | Flag | Purpose |
 | --- | --- |
-| `--host 10.0.0.11` | Target a light directly by IP, skipping discovery |
+| `--host 192.168.1.50` | Target a light directly by IP, skipping discovery |
 | `-l, --light <name>` | Act on a single light (by name or serial) |
 | `--refresh` | Force mDNS discovery instead of using cached addresses |
 | `--json` | Machine-readable output |
@@ -137,8 +137,8 @@ Shell completion is available via `elgato completion <bash|zsh|fish>` (Homebrew 
 Every command that prints state (`status`, `on`, `temp`, …) shows a `COLOR` column with the approximate on-screen color of the light's color temperature — warm amber down near 2900K, a cool bluish white up near 7000K — alongside its `#rrggbb` hex value:
 
 ```text
-NAME             HOST       POWER  BRIGHTNESS  TEMPERATURE  COLOR
-Arvi's KeyLight  10.0.0.11  on     50%         4700K        ███ #ffdec3
+NAME       HOST          POWER  BRIGHTNESS  TEMPERATURE  COLOR
+Key Light  192.168.1.50  on     50%         4700K        ███ #ffdec3
 ```
 
 The swatch uses 24-bit ("truecolor") ANSI and is shown only when writing to a terminal. It is suppressed automatically when piping output, when the [`NO_COLOR`](https://no-color.org) environment variable is set, or with `--color never`; force it on with `--color always`. The `--json` output includes the value as a `color` field.
@@ -157,7 +157,7 @@ The swatch uses 24-bit ("truecolor") ANSI and is shown only when writing to a te
 lights:
   key-left:
     serial: CW12A3B45678   # stable identity, from `elgato list`
-    host: 10.0.0.11        # last known address (auto-refreshed)
+    host: 192.168.1.50     # last known address (auto-refreshed)
     port: 9123
 discovery_timeout: 2s
 ```
@@ -177,28 +177,6 @@ go vet ./...
 ```
 
 The pure logic (Kelvin↔mireds conversion, brightness parsing, request shape) lives in `internal/elgato` and is unit-tested without hardware. Network code (HTTP client, mDNS) is isolated in `internal/elgato` and `internal/discovery`. The HomeKit bridge lives in `internal/homekit` and is tested against a fake light served by `httptest`.
-
-## Releasing (maintainers)
-
-Releases are automated with [GoReleaser](https://goreleaser.com) via GitHub Actions. One-time setup:
-
-1. Create a second GitHub repo named **`homebrew-elgato`** (this is the tap).
-2. Create a fine-grained personal access token with access to only that tap repo and **Contents: Read and write**. Save it to **this** repo as the Actions secret **`TAP_GITHUB_TOKEN`**:
-
-   ```console
-   gh secret set TAP_GITHUB_TOKEN --repo arventures/elgato
-   ```
-
-   It prompts for the value, so the token never lands in your shell history.
-
-Then cut a release by pushing a tag:
-
-```console
-git tag v0.3.0
-git push origin v0.3.0
-```
-
-The workflow builds macOS/Linux binaries (Intel + Apple silicon), publishes a GitHub Release, and pushes an updated Homebrew **cask** to the tap (Homebrew now prefers casks for pre-built binaries; casks are macOS-only). Validate config locally with `goreleaser check` and dry-run with `goreleaser release --snapshot --clean`.
 
 ## Disclaimer
 

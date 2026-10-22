@@ -17,8 +17,8 @@ import (
 // keyLight is the light a fakeLight plays.
 var keyLight = elgato.AccessoryInfo{
 	ProductName:     "Elgato Key Light Air",
-	SerialNumber:    "CW30K1A07261",
-	DisplayName:     "Arvi's KeyLight",
+	SerialNumber:    "CW12A3B45678",
+	DisplayName:     "Desk Light",
 	FirmwareVersion: "1.0.3",
 }
 
@@ -86,8 +86,8 @@ func TestLightMirrorsDevice(t *testing.T) {
 	if !l.on.Value() || l.brightness.Value() != 40 || l.temperature.Value() != 213 {
 		t.Errorf("HomeKit holds %s, want on, 40%%, 213 mireds", l)
 	}
-	if got := l.acc.Info.Name.Value(); got != "Arvi's KeyLight" {
-		t.Errorf("accessory name = %q, want Arvi's KeyLight", got)
+	if got := l.acc.Info.Name.Value(); got != "Desk Light" {
+		t.Errorf("accessory name = %q, want Desk Light", got)
 	}
 }
 
@@ -95,9 +95,9 @@ func TestLightOfflineAtStartupGetsItsName(t *testing.T) {
 	f := &fakeLight{state: elgato.LightState{On: 1, Brightness: 40, Temperature: 213}}
 	d, _ := serve(t, f)
 	// What the bridge knows about a cached light that didn't answer at startup.
-	d.Name, d.Info = "arvi-s-keylight", &elgato.AccessoryInfo{SerialNumber: keyLight.SerialNumber}
+	d.Name, d.Info = "desk-light", &elgato.AccessoryInfo{SerialNumber: keyLight.SerialNumber}
 	l := newLight(d, 2)
-	if got := l.acc.Info.Name.Value(); got != "arvi s keylight" {
+	if got := l.acc.Info.Name.Value(); got != "desk light" {
 		t.Fatalf("name before the light answers = %q, want the config name", got)
 	}
 
@@ -105,8 +105,8 @@ func TestLightOfflineAtStartupGetsItsName(t *testing.T) {
 		t.Fatal(err)
 	}
 	info := l.acc.Info
-	if info.Name.Value() != "Arvi's KeyLight" || info.Model.Value() != "Elgato Key Light Air" || info.FirmwareRevision.Value() != "1.0.3" {
-		t.Errorf("after the light answers: name %q, model %q, firmware %q; want Arvi's KeyLight, Elgato Key Light Air, 1.0.3",
+	if info.Name.Value() != "Desk Light" || info.Model.Value() != "Elgato Key Light Air" || info.FirmwareRevision.Value() != "1.0.3" {
+		t.Errorf("after the light answers: name %q, model %q, firmware %q; want Desk Light, Elgato Key Light Air, 1.0.3",
 			info.Name.Value(), info.Model.Value(), info.FirmwareRevision.Value())
 	}
 }

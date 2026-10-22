@@ -23,7 +23,7 @@ type Device struct {
 	Info *AccessoryInfo // populated by FetchInfo
 }
 
-// BaseURL returns the device's API root, e.g. http://10.0.0.11:9123.
+// BaseURL returns the device's API root, e.g. http://192.168.1.50:9123.
 func (d *Device) BaseURL() string {
 	port := d.Port
 	if port == 0 {

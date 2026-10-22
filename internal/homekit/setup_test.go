@@ -75,9 +75,9 @@ func TestAccessoryIDsAreStable(t *testing.T) {
 
 func TestAccessoryName(t *testing.T) {
 	cases := map[string]string{
-		"Arvi's KeyLight":     "Arvi's KeyLight",
-		"Arvi’s KeyLight":     "Arvi's KeyLight", // curly apostrophe from iOS
-		"arvi-s-keylight":     "arvi s keylight", // config slug
+		"Sam's KeyLight":      "Sam's KeyLight",
+		"Sam’s KeyLight":      "Sam's KeyLight", // curly apostrophe from iOS
+		"sam-s-keylight":      "sam s keylight", // config slug
 		" Key_Light (Left)! ": "Key Light Left",
 		"'Desk'":              "Desk",
 		"Café Lamp 2":         "Café Lamp 2",

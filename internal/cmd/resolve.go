@@ -17,7 +17,7 @@ var errNoLights = errors.New(
 	"no Elgato lights found\n" +
 		"  • make sure the light is powered and on the same network/Wi-Fi\n" +
 		"  • try: elgato --refresh list\n" +
-		"  • or target it directly: elgato --host 10.0.0.11 on")
+		"  • or target it directly: elgato --host 192.168.1.50 on")
 
 // resolveDevices returns the set of lights a command should act on, honoring
 // --host, --light and --refresh. Strategy: use cached addresses first (fast),

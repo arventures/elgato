@@ -11,12 +11,12 @@ import (
 
 func TestDaemonPlistXML(t *testing.T) {
 	plist := daemonPlistXML("/Users/a&b/go/bin/elgato", []string{"--light", "key & left", "homekit"},
-		"arvi", "/Users/a&b", "/Users/a&b/Library/Logs/elgato-homekit.log")
+		"sam", "/Users/a&b", "/Users/a&b/Library/Logs/elgato-homekit.log")
 	for _, want := range []string{
 		"<string>ventures.ar.elgato.homekit</string>",
 		"<array>\n\t\t<string>/Users/a&amp;b/go/bin/elgato</string>\n\t\t<string>--light</string>\n" +
 			"\t\t<string>key &amp; left</string>\n\t\t<string>homekit</string>\n\t</array>",
-		"<key>UserName</key>\n\t<string>arvi</string>",
+		"<key>UserName</key>\n\t<string>sam</string>",
 		"<key>HOME</key>\n\t\t<string>/Users/a&amp;b</string>",
 		"<key>StandardErrorPath</key>\n\t<string>/Users/a&amp;b/Library/Logs/elgato-homekit.log</string>",
 	} {
@@ -47,8 +47,8 @@ func TestDaemonArgsKeepInstallFlags(t *testing.T) {
 		t.Errorf("no flags: daemonArgs() = %q, want [homekit]", got)
 	}
 
-	opts.host, opts.port, opts.light = "10.0.0.11", 9124, "key-left"
-	want := []string{"--host", "10.0.0.11", "--port", "9124", "--light", "key-left", "homekit"}
+	opts.host, opts.port, opts.light = "192.168.1.50", 9124, "key-left"
+	want := []string{"--host", "192.168.1.50", "--port", "9124", "--light", "key-left", "homekit"}
 	if got := daemonArgs(); !slices.Equal(got, want) {
 		t.Errorf("with flags: daemonArgs() = %q, want %q", got, want)
 	}
