@@ -4,6 +4,12 @@ Put your [Elgato Key Lights](https://www.elgato.com/us/en/p/key-light) in the Ap
 
 Key Lights don't support HomeKit on their own. `elgato` adds it: a small HomeKit bridge runs on your Mac, and your lights show up in the Home app next to your other accessories, ready for Siri, Control Center, scenes and automations. The same tool is also a fast command-line remote for your lights.
 
+<p align="center">
+  <img src="docs/home-app-light.jpg" width="250" alt="A Key Light in the Home app on iPhone, with its brightness slider and color temperature presets">
+  &nbsp;&nbsp;&nbsp;
+  <img src="docs/home-app-settings.jpg" width="250" alt="The Key Light's settings in the Home app, with its room, favourites and automations">
+</p>
+
 ## Add your Key Lights to Apple Home
 
 ### What you need
